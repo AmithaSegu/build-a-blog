@@ -7,49 +7,61 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://build-a-blog:root@local
 app.config['SQLALCHEMY_ECHO'] = True
 db = SQLAlchemy(app)
 
-header_form="""
-<!DOCTYPE html>
-<html>
-<header>
-    <title>Build-A-Blog</title>
-    <a href="#Main blog page">Main Blog Page</a>
-    <a href="#Add a new bolg post">Add A New Blog Post</a>
-</header>
-<body>
-"""
-footer_form="""
-</body>
-</html>
-"""
-blog_form="""
-<form>
-    <h1 style="text-align:center;">BUILD A BLOG</h1>
-</form>
 
-"""
-new_blog="""
-<form>
-    <h1 style="text-align:center;">ADD A NEW BLOG ENTRY</h1>
-    <b><label for="title-blog">Title for your new Blog:</label><br></b>
-    <input type="text" name="title-blog" value='{tile-blog}' /><br>
-    <b><label for="blog-details" style="text-align:center;">Your new Blog:</label><br></b>
-    <textarea name="text">{details}</textarea><br>
-    <input type="submit" value="ADD ENTRY" />
-</form>
-"""
+class Blog(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(120))
+    detail = db.Column(db.String(120))
+
+    def __init__(self,title,detail):
+        self.title=title
+        self.detail=detail
+
+
 @app.route('/')
 def index():
     return redirect('/blog')
 
 @app.route('/blog', methods=['POST','GET'])
-def blog_page():    
-    content = header_form+blog_form+footer_form
-    return content
+def blog_page():
+    if request.args:
+        blog_id = request.args.get("id")
+        blog = Blog.query.get(blog_id) 
+        return render_template('blog_page.html',blog=blog)        
+    else:
+        blogs= Blog.query.all()
+        return render_template("main_blog_page.html",blogs=blogs)
     
-@app.route('/new-blog', methods=['POST','GET'])
-def new_blog_page():
-    content = header_form+new_blog+footer_form
-    return content
-    
+    return render_template('main_blog_page.html')
 
-app.run()
+@app.route('/newpost', methods=['POST','GET'])
+def new_blog_page():
+    title_error=""
+    detail_error=""
+    if request.method=='GET':
+        return render_template('new_post_page.html')
+
+    if request.method=='POST':
+        titles = request.form['title_blog']
+        details = request.form['detail']
+        
+        if titles == "":
+            title_error="PLEASE ENTER VALID TITLE"
+            #return title_error
+            return render_template('new_post_page.html',title_error=title_error,detail_error=detail_error)
+        
+        if details == "":
+            detail_error="PLEASE ENTER A VALID DETAIL"
+            #return detail_error
+            return render_template('new_post_page.html',title_error=title_error,detail_error=detail_error)
+        
+        if title_error=="" and detail_error=="":
+            title_detail = Blog(titles,details)
+            db.session.add(title_detail)
+            db.session.commit()
+            return render_template("blog_page.html",titles=titles,details=details)
+
+        return render_template('new_post_page.html',title_error=title_error,detail_error=detail_error)
+    
+if __name__ =='__main__':
+    app.run()
