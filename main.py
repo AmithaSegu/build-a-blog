@@ -24,15 +24,16 @@ def index():
 
 @app.route('/blog', methods=['POST','GET'])
 def blog_page():
-    if request.args:
-        blog_id = request.args.get("id")
+    blog_id = request.args.get("id")
+    #if request.args:
+    if blog_id != None:
         blog = Blog.query.get(blog_id) 
-        return render_template('blog_page.html',blog=blog)        
+        return render_template('blog_page.html',blog=blog.id)        
     else:
         blogs= Blog.query.all()
         return render_template("main_blog_page.html",blogs=blogs)
     
-    return render_template('main_blog_page.html')
+    #return render_template('main_blog_page.html')
 
 @app.route('/newpost', methods=['POST','GET'])
 def new_blog_page():
@@ -40,6 +41,7 @@ def new_blog_page():
     detail_error=""
     if request.method=='GET':
         return render_template('new_post_page.html')
+        
 
     if request.method=='POST':
         titles = request.form['title_blog']
@@ -47,19 +49,18 @@ def new_blog_page():
         
         if titles == "":
             title_error="PLEASE ENTER VALID TITLE"
-            #return title_error
             return render_template('new_post_page.html',title_error=title_error,detail_error=detail_error)
         
         if details == "":
             detail_error="PLEASE ENTER A VALID DETAIL"
-            #return detail_error
             return render_template('new_post_page.html',title_error=title_error,detail_error=detail_error)
         
         if title_error=="" and detail_error=="":
             title_detail = Blog(titles,details)
             db.session.add(title_detail)
             db.session.commit()
-            return render_template("blog_page.html",titles=titles,details=details)
+            #return render_template('blog_page.html',titles=titles,details=details)
+            return redirect('/blog?id={0}'.format(title_detail.id))
 
         return render_template('new_post_page.html',title_error=title_error,detail_error=detail_error)
     
