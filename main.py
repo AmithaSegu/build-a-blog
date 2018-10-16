@@ -24,14 +24,17 @@ def index():
 
 @app.route('/blog', methods=['POST','GET'])
 def blog_page():
-    blog_id = request.args.get("id")
-    #if request.args:
-    if blog_id != None:
-        blog = Blog.query.get(blog_id) 
-        return render_template('blog_page.html',blog=blog.id)        
-    else:
-        blogs= Blog.query.all()
-        return render_template("main_blog_page.html",blogs=blogs)
+    if request.method=='GET':
+        if request.args:
+            blog_id = request.args.get("id")
+
+            blog = Blog.query.get(blog_id)
+            titles=blog.title
+            details=blog.detail
+            return render_template('blog_page.html',details=details,titles=titles)        
+    #else:
+    blogs= Blog.query.all()
+    return render_template("main_blog_page.html",blogs=blogs)
     
     #return render_template('main_blog_page.html')
 
@@ -59,10 +62,11 @@ def new_blog_page():
             title_detail = Blog(titles,details)
             db.session.add(title_detail)
             db.session.commit()
+            id = title_detail.id
             #return render_template('blog_page.html',titles=titles,details=details)
-            return redirect('/blog?id={0}'.format(title_detail.id))
+            return redirect('/blog?id={0}'.format(id))
 
-        return render_template('new_post_page.html',title_error=title_error,detail_error=detail_error)
+        #return render_template('new_post_page.html',title_error=title_error,detail_error=detail_error)
     
 if __name__ =='__main__':
     app.run()
